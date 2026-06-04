@@ -145,30 +145,14 @@ public class FieldController {
             return ResponseEntity.internalServerError().body("Lỗi khi thêm sân: " + e.getMessage());
         }
     }
-
-        // API HỖ TRỢ LỌC TÊN, ĐỊA CHỈ, NGÀY VÀ GIỜ
-   // Thay thế API /search cũ bằng đoạn này
+//tìm kiếm
+   // API TÌM KIẾM ĐƠN GIẢN (Chỉ theo Tên và Vị trí)
     @GetMapping("/search")
     public List<Field> searchFields(
             @RequestParam(value = "name", required = false) String name,
-            @RequestParam(value = "address", required = false) String address,
-            @RequestParam(value = "date", required = false) String date,
-            @RequestParam(value = "time", required = false) String time) {
+            @RequestParam(value = "address", required = false) String address) {
         
-        // Nếu giao diện CÓ gửi cả ngày và giờ
-        if (date != null && !date.isEmpty() && time != null && !time.isEmpty()) {
-            try {
-                String dateTimeStr = date + "T" + time + ":00";
-                java.time.LocalDateTime checkDateTime = java.time.LocalDateTime.parse(dateTimeStr);
-                
-                // Trả về kết quả tìm kiếm có check lịch trống
-                return fieldRepository.searchWithTime(name, address, checkDateTime);
-            } catch (Exception e) {
-                System.out.println("Lỗi ngày giờ: " + e.getMessage());
-            }
-        }
-
-        // Nếu KHÔNG nhập ngày giờ (hoặc bị lỗi) thì chỉ tìm theo Tên và Địa chỉ
+        // Gọi thẳng xuống Repository để tìm kiếm luôn, không cần check ngày giờ lằng nhằng nữa
         return fieldRepository.searchBasic(name, address);
     }
 
