@@ -1,6 +1,6 @@
 package com.booking.football_api.controller;
 
-import com.booking.football_api.entity.user;
+import com.booking.football_api.entity.User;
 import com.booking.football_api.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Date;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/Users")
 @CrossOrigin("*") // BẮT BUỘC CÓ: Để Frontend (chạy port khác) có thể gọi được API này
 public class UserController {
 
@@ -17,7 +17,7 @@ public class UserController {
     private UserRepository userRepository;
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody user newUser) {
+    public ResponseEntity<?> registerUser(@RequestBody User newUser) {
         
         // 1. Kiểm tra xem Email đã có ai đăng ký chưa
         if (userRepository.existsByEmail(newUser.getEmail())) {
