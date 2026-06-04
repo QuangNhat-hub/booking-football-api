@@ -2,6 +2,9 @@ package com.booking.football_api.controller;
 
 import com.booking.football_api.dto.BookingResponseDTO;
 import com.booking.football_api.dto.CancelBookingRequestDTO;
+import com.booking.football_api.dto.CreateBookingRequest;
+import com.booking.football_api.entity.Booking;
+import com.booking.football_api.repository.BookingRepository;
 import com.booking.football_api.service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -13,10 +16,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/bookings")
 @CrossOrigin(origins = "*")
+
 public class BookingController {
 
 	@Autowired
 	private BookingService bookingService;
+	private BookingRepository bookingRepository;
 
 	@GetMapping("/user/{userId}")
 	public ResponseEntity<List<BookingResponseDTO>> getUserBookings(@PathVariable Long userId) {
@@ -58,4 +63,29 @@ public class BookingController {
 			return ResponseEntity.internalServerError().body("Lỗi khi hủy đơn: " + e.getMessage());
 		}
 	}
+	@PostMapping
+public ResponseEntity<?> createBooking(
+        @RequestBody CreateBookingRequest request) {
+
+    try {
+
+        return ResponseEntity.ok(
+                bookingService.createBooking(
+                        request));
+
+    } catch (Exception e) {
+
+        return ResponseEntity.badRequest()
+                .body(e.getMessage());
+    }
+}
+@GetMapping("/field/{pitchId}")
+public List<Booking> getFieldBookings(
+        @PathVariable Long pitchId) {
+
+    return bookingRepository
+            .findByPitchIdAndStatusNot(
+                    pitchId,
+                    "cancelled");
+}
 }

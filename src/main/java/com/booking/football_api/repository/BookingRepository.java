@@ -7,7 +7,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface BookingRepository extends JpaRepository<Booking, Long> {
+public interface BookingRepository
+        extends JpaRepository<Booking, Long> {
+
     List<Booking> findByUserIdOrderByStartTimeDesc(Long userId);
 
     List<Booking> findByPitchId(Long pitchId);
@@ -15,4 +17,10 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findByStatus(String status);
 
     List<Booking> findByUserIdAndStatus(Long userId, String status);
+
+    List<Booking> findByPitchIdAndStatusNot(
+            Long pitchId,
+            String status
+    );
 }
+

@@ -17,4 +17,5 @@ public class BookingResponseDTO {
     private Double totalPrice;
     private String status;
     private String cancelReason;
+    
 }

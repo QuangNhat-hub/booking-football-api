@@ -28,6 +28,9 @@ public class Field {
     @Column(name = "Status")
     private Boolean status;
 
+    @Column(name = "Price")
+    private Double price;
+
     @OneToMany(mappedBy = "field", fetch = FetchType.LAZY)
     private java.util.List<FieldImage> images;
 }
