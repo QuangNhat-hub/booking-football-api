@@ -32,31 +32,28 @@ public class FieldController {
         return fieldRepository.findById(id).orElse(null);
     }
     // API HỖ TRỢ LỌC TÊN, ĐỊA CHỈ, NGÀY VÀ GIỜ
+   // Thay thế API /search cũ bằng đoạn này
     @GetMapping("/search")
     public List<Field> searchFields(
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) String address,
-            @RequestParam(required = false) String date,
-            @RequestParam(required = false) String time) {
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "address", required = false) String address,
+            @RequestParam(value = "date", required = false) String date,
+            @RequestParam(value = "time", required = false) String time) {
         
-        LocalDateTime checkDateTime = null;
-
-        // Nếu giao diện có gửi lên cả Ngày và Giờ thì tiến hành xử lý ghép chuỗi
+        // Nếu giao diện CÓ gửi cả ngày và giờ
         if (date != null && !date.isEmpty() && time != null && !time.isEmpty()) {
             try {
-                // Ghép chuỗi lại. VD: "10/29/2026 10:30 PM"
-                String dateTimeStr = date + " " + time;
+                String dateTimeStr = date + "T" + time + ":00";
+                java.time.LocalDateTime checkDateTime = java.time.LocalDateTime.parse(dateTimeStr);
                 
-                // Định dạng này khớp với cái ảnh giao diện của bạn (MM/dd/yyyy hh:mm a)
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy hh:mm a", Locale.ENGLISH);
-                checkDateTime = LocalDateTime.parse(dateTimeStr, formatter);
+                // Trả về kết quả tìm kiếm có check lịch trống
+                return fieldRepository.searchWithTime(name, address, checkDateTime);
             } catch (Exception e) {
-                System.out.println("Lỗi parse ngày giờ từ Frontend: " + e.getMessage());
-                // Nếu bị lỗi parse (do frontend gửi sai format), hệ thống sẽ bỏ qua lọc ngày giờ,
-                // chỉ tìm theo tên và địa chỉ để không bị sập server.
+                System.out.println("Lỗi ngày giờ: " + e.getMessage());
             }
         }
 
-        return fieldRepository.searchAvailableFields(name, address, checkDateTime);
+        // Nếu KHÔNG nhập ngày giờ (hoặc bị lỗi) thì chỉ tìm theo Tên và Địa chỉ
+        return fieldRepository.searchBasic(name, address);
     }
 }   
