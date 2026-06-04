@@ -32,4 +32,21 @@ public class UserController {
 
         return ResponseEntity.ok("Đăng ký thành công!");
     }
+    @PostMapping("/login")
+    public ResponseEntity<?> loginUser(@RequestBody User loginRequest) {
+        // 1. Tìm xem số điện thoại có tồn tại trong database không
+        User user = userRepository.findByPhone(loginRequest.getPhone());
+        
+        if (user == null) {
+            return ResponseEntity.badRequest().body("Số điện thoại không tồn tại trên hệ thống!");
+        }
+
+        // 2. Kiểm tra mật khẩu
+        if (!user.getPassword().equals(loginRequest.getPassword())) {
+            return ResponseEntity.badRequest().body("Mật khẩu không chính xác!");
+        }
+
+        // 3. Nếu đúng hết, trả về thông tin user
+        return ResponseEntity.ok(user);
+    }
 }

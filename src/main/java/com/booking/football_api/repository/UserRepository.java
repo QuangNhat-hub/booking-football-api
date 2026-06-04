@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 public interface UserRepository extends JpaRepository<User, Integer> {
     // Spring Boot sẽ tự động viết lệnh SQL kiểm tra Email đã tồn tại hay chưa
     boolean existsByEmail(String email);
+    User findByPhone(String phone);
 }
