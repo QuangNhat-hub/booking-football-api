@@ -38,6 +38,8 @@ public class User {
     public Integer getUserId() {
         return userId;
     }
+    @Column(name = "Status")
+    private Integer status;
     // BẠN HÃY TỰ GENERATE GETTER VÀ SETTER CHO CÁC BIẾN Ở ĐÂY NHÉ
     // (Chuột phải -> Source Action -> Generate Getters and Setters)
 }

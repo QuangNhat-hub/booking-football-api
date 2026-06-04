@@ -47,7 +47,7 @@ public class BookingService {
 	}
 
 	private BookingResponseDTO convertToDTO(Booking booking) {
-		Field field = fieldRepository.findById(booking.getPitchId()).orElse(null);
+		Field field = fieldRepository.findById(booking.getPitchId().intValue()).orElse(null);
 		String pitchName = (field != null) ? field.getFieldName() : "Sân không xác định";
 		String pitchAddress = (field != null) ? field.getAddress() : "";
 		return new BookingResponseDTO(

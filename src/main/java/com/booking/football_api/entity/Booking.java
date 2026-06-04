@@ -1,6 +1,6 @@
 package com.booking.football_api.entity;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity

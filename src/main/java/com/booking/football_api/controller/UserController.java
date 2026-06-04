@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Date;
 
 @RestController
-@RequestMapping("/api/Users")
+@RequestMapping("/api/users")
 @CrossOrigin("*") // BẮT BUỘC CÓ: Để Frontend (chạy port khác) có thể gọi được API này
 public class UserController {
 
@@ -26,7 +26,7 @@ public class UserController {
 
         // 2. Gán ngày tạo tài khoản là ngày hiện tại
         newUser.setCreatedAt(new Date());
-
+        newUser.setStatus(1);
         // 3. Lưu xuống Database
         userRepository.save(newUser);
 
