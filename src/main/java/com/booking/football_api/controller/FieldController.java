@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.dao.DataIntegrityViolationException; // Nhớ có dòng import này ở trên cùng
 import com.booking.football_api.repository.FieldImageRepository;
+
 import java.util.List;
 
 @RestController
@@ -35,7 +36,6 @@ public class FieldController {
     public Field getFieldById(@PathVariable Integer id) {
         return fieldRepository.findById(id).orElse(null);
     }
-
 // ...
 
     @DeleteMapping("/{id}")
@@ -134,4 +134,31 @@ public class FieldController {
             return ResponseEntity.internalServerError().body("Lỗi khi thêm sân: " + e.getMessage());
         }
     }
+
+        // API HỖ TRỢ LỌC TÊN, ĐỊA CHỈ, NGÀY VÀ GIỜ
+   // Thay thế API /search cũ bằng đoạn này
+    @GetMapping("/search")
+    public List<Field> searchFields(
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "address", required = false) String address,
+            @RequestParam(value = "date", required = false) String date,
+            @RequestParam(value = "time", required = false) String time) {
+        
+        // Nếu giao diện CÓ gửi cả ngày và giờ
+        if (date != null && !date.isEmpty() && time != null && !time.isEmpty()) {
+            try {
+                String dateTimeStr = date + "T" + time + ":00";
+                java.time.LocalDateTime checkDateTime = java.time.LocalDateTime.parse(dateTimeStr);
+                
+                // Trả về kết quả tìm kiếm có check lịch trống
+                return fieldRepository.searchWithTime(name, address, checkDateTime);
+            } catch (Exception e) {
+                System.out.println("Lỗi ngày giờ: " + e.getMessage());
+            }
+        }
+
+        // Nếu KHÔNG nhập ngày giờ (hoặc bị lỗi) thì chỉ tìm theo Tên và Địa chỉ
+        return fieldRepository.searchBasic(name, address);
+    }
 }
+
