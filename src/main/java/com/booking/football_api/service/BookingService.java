@@ -5,46 +5,65 @@ import com.booking.football_api.entity.Booking;
 import com.booking.football_api.entity.Field;
 import com.booking.football_api.repository.BookingRepository;
 import com.booking.football_api.repository.FieldRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class BookingService {
+    
+    private final BookingRepository bookingRepository;
+    private final FieldRepository fieldRepository;
 
-	@Autowired
-	private BookingRepository bookingRepository;
+    // Constructor injection - tốt hơn @Autowired
+    public BookingService(BookingRepository bookingRepository, FieldRepository fieldRepository) {
+        this.bookingRepository = bookingRepository;
+        this.fieldRepository = fieldRepository;
+    }
 
-	@Autowired
-	private FieldRepository fieldRepository;  // dùng FieldRepository có sẵn
+    public List<BookingResponseDTO> getUserBookings(Long userId) {
+        if (userId == null || userId <= 0) {
+            throw new IllegalArgumentException("User ID không hợp lệ");
+        }
+        
+        List<Booking> bookings = bookingRepository.findByUserIdOrderByStartTimeDesc(userId);
+        return bookings.stream()
+                .map(this::convertToDTO)
+                .toList();
+    }
 
-	public List<BookingResponseDTO> getUserBookings(Long userId) {
-		List<Booking> bookings = bookingRepository.findByUserIdOrderByStartTimeDesc(userId);
-		return bookings.stream().map(this::convertToDTO).collect(Collectors.toList());
-	}
+    @Transactional
+    public boolean cancelBooking(Long bookingId, String reason) {
+        if (bookingId == null || bookingId <= 0) {
+            throw new IllegalArgumentException("Booking ID không hợp lệ");
+        }
+        
+        if (reason == null || reason.trim().isEmpty()) {
+            throw new IllegalArgumentException("Lý do hủy không được để trống");
+        }
 
-	@Transactional
-	public boolean cancelBooking(Long bookingId, String reason) {
-		Booking booking = bookingRepository.findById(bookingId)
-						  .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn đặt"));
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn đặt với ID: " + bookingId));
 
-		if (!booking.getStatus().equals("pending") && !booking.getStatus().equals("confirmed")) {
-			return false;
-		}
+        // Kiểm tra trạng thái
+        String status = booking.getStatus();
+        if (!("pending".equals(status) || "confirmed".equals(status))) {
+            throw new IllegalArgumentException("Chỉ có thể hủy đơn đặt ở trạng thái pending hoặc confirmed");
+        }
 
-		LocalDateTime now = LocalDateTime.now();
-		if (booking.getStartTime().isBefore(now.plusHours(24))) {
-			return false;
-		}
+        // Kiểm tra thời gian hủy (phải cách ít nhất 24 giờ)
+        LocalDateTime now = LocalDateTime.now();
+        if (booking.getStartTime().isBefore(now.plusHours(24))) {
+            throw new IllegalArgumentException("Chỉ có thể hủy đơn đặt trước 24 giờ bắt đầu");
+        }
 
-		booking.setStatus("cancelled");
-		booking.setCancelReason(reason);
-		bookingRepository.save(booking);
-		return true;
-	}
+        booking.setStatus("cancelled");
+        booking.setCancelReason(reason);
+        bookingRepository.save(booking);
+        return true;
+    }
 
 	private BookingResponseDTO convertToDTO(Booking booking) {
 		Field field = fieldRepository.findById(booking.getPitchId().intValue()).orElse(null);
