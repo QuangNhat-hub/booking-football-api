@@ -15,9 +15,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.dao.DataIntegrityViolationException; // Nhớ có dòng import này ở trên cùng
-import com.booking.football_api.repository.FieldImageRepository;
 
+import com.booking.football_api.repository.FieldImageRepository;
+import org.springframework.web.multipart.MultipartFile;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 @RestController
@@ -38,28 +42,35 @@ public class FieldController {
     }
 // ...
 
-    @DeleteMapping("/{id}")
+@DeleteMapping("/{id}")
     public ResponseEntity<?> deleteField(@PathVariable Integer id) {
         try {
-            // 1. Kiểm tra xem sân có tồn tại không
             Field field = fieldRepository.findById(id).orElse(null);
             if (field == null) {
                 return ResponseEntity.badRequest().body("Sân bóng không tồn tại!");
             }
 
-            // 2. Tiến hành xóa luôn. 
-            // Nếu sân này đang có trong BOOKING_DETAIL, SQL sẽ ném lỗi ngay lập tức!
+            // 1. DỌN DẸP HÌNH ẢNH TRƯỚC: 
+            // Lấy danh sách ảnh của sân này và xóa hết khỏi bảng FIELDIMAGE
+            List<FieldImage> images = field.getImages();
+            if (images != null && !images.isEmpty()) {
+                fieldImageRepository.deleteAll(images);
+            }
+
+            // 2. XÓA SÂN: 
+            // Lúc này sân đã sạch sẽ không còn ảnh, nếu SQL Server vẫn chặn lại
+            // thì 100% là do có giao dịch đặt sân (Booking_Detail)
             fieldRepository.delete(field);
+            
             return ResponseEntity.ok("Đã xóa sân thành công!");
 
-        } catch (DataIntegrityViolationException e) {
-            // 3. Hứng lỗi Khóa ngoại từ Database
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            // Lỗi này giờ đây chỉ có thể do bảng Booking_Detail gây ra
             return ResponseEntity.status(422).body("Không thể xóa! Sân này đã từng có giao dịch đặt sân.");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Lỗi hệ thống: " + e.getMessage());
         }
     }
-
     // API Đổi trạng thái sân (Hoạt động <-> Bảo trì)
     @PutMapping("/{id}/status")
     public ResponseEntity<?> updateFieldStatus(@PathVariable Integer id, @RequestParam String status) {
@@ -159,6 +170,53 @@ public class FieldController {
 
         // Nếu KHÔNG nhập ngày giờ (hoặc bị lỗi) thì chỉ tìm theo Tên và Địa chỉ
         return fieldRepository.searchBasic(name, address);
+    }
+
+    @PostMapping("/upload")
+    public ResponseEntity<?> createFieldWithImage(
+            @RequestParam("fieldName") String fieldName,
+            @RequestParam("address") String address,
+            @RequestParam("fieldTypeId") Integer fieldTypeId,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "image", required = false) MultipartFile image) {
+        
+        try {
+            // 1. Tạo Sân bóng
+            Field field = new Field();
+            field.setFieldName(fieldName);
+            field.setAddress(address);
+            field.setDescription(description);
+            field.setStatus(true);
+            
+            Field savedField = fieldRepository.save(field);
+
+            // 2. Xử lý lưu file ảnh vào thư mục máy tính
+            if (image != null && !image.isEmpty()) {
+                // Tạo thư mục 'uploads' nếu máy chưa có
+                Path uploadDir = Paths.get("uploads");
+                if (!Files.exists(uploadDir)) {
+                    Files.createDirectories(uploadDir);
+                }
+
+                // Đặt tên file (thêm thời gian hệ thống để không bị trùng tên)
+                String fileName = System.currentTimeMillis() + "_" + image.getOriginalFilename();
+                Path filePath = uploadDir.resolve(fileName);
+
+                // Copy file ảnh vào thư mục
+                Files.copy(image.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+                // 3. Lưu đường dẫn vào Database
+                FieldImage fieldImage = new FieldImage();
+                fieldImage.setField(savedField);
+                // Đường dẫn này Lát nữa ta sẽ cấu hình để Frontend đọc được
+                fieldImage.setImageUrl("http://localhost:8080/uploads/" + fileName);
+                fieldImageRepository.save(fieldImage);
+            }
+
+            return ResponseEntity.ok(savedField);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Lỗi khi thêm sân: " + e.getMessage());
+        }
     }
 }
 
