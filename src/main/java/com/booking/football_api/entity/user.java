@@ -7,7 +7,7 @@ import java.util.Date;
 @Data
 @Entity
 @Table(name = "[USER]") // Dùng ngoặc vuông vì USER là từ khóa của SQL Server
-public class user {
+public class User {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
