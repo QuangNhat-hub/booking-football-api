@@ -22,6 +22,6 @@ public interface BookingRepository
             Long pitchId,
             String status
     );
-
+    List<Booking> findByUserId(Long userId);
 }
 
