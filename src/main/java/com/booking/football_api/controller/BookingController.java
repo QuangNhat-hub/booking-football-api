@@ -80,6 +80,16 @@ public ResponseEntity<?> createBooking(
                 .body(e.getMessage());
     }
 }
+@PutMapping("/{bookingId}/confirm")
+public ResponseEntity<?> confirmBooking(@PathVariable Long bookingId) {
+    Booking booking = bookingRepository.findById(bookingId)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy booking"));
+
+    booking.setStatus("confirmed");
+    bookingRepository.save(booking);
+
+    return ResponseEntity.ok("Xác nhận booking thành công");
+}
 @GetMapping("/field/{pitchId}")
 public ResponseEntity<?> getFieldBookings(@PathVariable Long pitchId) {
     try {

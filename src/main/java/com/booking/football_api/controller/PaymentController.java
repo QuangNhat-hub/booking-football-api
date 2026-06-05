@@ -18,9 +18,21 @@ public class PaymentController {
     }
 
     @PostMapping
-    public Payment createPayment(@RequestBody Payment payment) {
+public Payment createPayment(@RequestBody Payment payment) {
+    try {
+        System.out.println("BookingId: " + payment.getBookingId());
+        System.out.println("Method: " + payment.getPaymentMethod());
+        System.out.println("Amount: " + payment.getPaymentAmount());
+        System.out.println("Status: " + payment.getPaymentStatus());
+
         payment.setPaymentDate(LocalDateTime.now());
         payment.setPaymentStatus("Thành công");
+
         return paymentRepository.save(payment);
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        throw e;
     }
+}
 }
