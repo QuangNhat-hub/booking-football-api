@@ -40,4 +40,13 @@ public class CreateBookingRequest {
     public void setHours(Integer hours) {
         this.hours = hours;
     }
+    private Double totalPrice;
+
+public Double getTotalPrice() {
+    return totalPrice;
+}
+
+public void setTotalPrice(Double totalPrice) {
+    this.totalPrice = totalPrice;
+}
 }

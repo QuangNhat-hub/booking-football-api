@@ -163,8 +163,7 @@ public BookingResponseDTO createBooking(
             LocalDateTime.now());
 
     booking.setTotalPrice(
-            field.getPrice()
-            * request.getHours());
+        request.getTotalPrice());
 
     Booking saved =
             bookingRepository.save(

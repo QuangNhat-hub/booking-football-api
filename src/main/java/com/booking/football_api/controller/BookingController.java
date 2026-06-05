@@ -21,6 +21,7 @@ public class BookingController {
 
 	@Autowired
 	private BookingService bookingService;
+	@Autowired
 	private BookingRepository bookingRepository;
 
 	@GetMapping("/user/{userId}")
@@ -81,13 +82,17 @@ public ResponseEntity<?> createBooking(
     }
 }
 @GetMapping("/field/{pitchId}")
-public List<Booking> getFieldBookings(
-        @PathVariable Long pitchId) {
+public ResponseEntity<?> getFieldBookings(@PathVariable Long pitchId) {
+    try {
+        List<Booking> bookings = bookingRepository.findByPitchId(pitchId);
 
-    return bookingRepository
-            .findByPitchIdAndStatusNot(
-                    pitchId,
-                    "cancelled");
+        return ResponseEntity.ok(bookings);
+
+    } catch (Exception e) {
+        return ResponseEntity
+                .internalServerError()
+                .body("Lỗi getFieldBookings: " + e.getMessage());
+    }
 }
 
 }
