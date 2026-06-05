@@ -1,5 +1,4 @@
 package com.booking.football_api.controller;
-
 import com.booking.football_api.dto.BookingResponseDTO;
 import com.booking.football_api.dto.CancelBookingRequestDTO;
 import com.booking.football_api.dto.CreateBookingRequest;
@@ -95,4 +94,33 @@ public ResponseEntity<?> getFieldBookings(@PathVariable Long pitchId) {
     }
 }
 
+@GetMapping
+    public ResponseEntity<?> getAllBookings() {
+	try {
+            List<Booking> bookings = bookingRepository.findAll();
+            return ResponseEntity.ok(bookings);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Lỗi tải đơn đặt: " + e.getMessage());
+        }
+    }
+
+	@PutMapping("/{id}/status")
+	public ResponseEntity<?> updateBookingStatus(@PathVariable Long id, @RequestParam String status) {
+        try {
+            // 1. Tìm đơn hàng
+            Booking booking = bookingRepository.findById(id).orElse(null);
+            if (booking == null) {
+                return ResponseEntity.badRequest().body("Không tìm thấy đơn đặt sân này!");
+            }
+
+            // 2. Can thiệp: Đổi trạng thái mới
+            booking.setStatus(status);
+            bookingRepository.save(booking);
+            
+            return ResponseEntity.ok("Cập nhật trạng thái đơn thành công!");
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Lỗi hệ thống: " + e.getMessage());
+        }
+    }
 }

@@ -120,12 +120,8 @@ public BookingResponseDTO createBooking(
                 "Số giờ phải lớn hơn 0");
     }
 
-    Field field =
-            fieldRepository.findById(
-                    request.getPitchId().intValue())
-                    .orElseThrow(() ->
-                            new IllegalArgumentException(
-                                    "Không tìm thấy sân"));
+    fieldRepository.findById(request.getPitchId().intValue())
+            .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sân"));
 
     LocalDateTime start =
             request.getStartTime();
@@ -157,7 +153,7 @@ public BookingResponseDTO createBooking(
             request.getHours());
 
     booking.setStatus(
-            "confirmed");
+            "pending");
 
     booking.setCreatedAt(
             LocalDateTime.now());
